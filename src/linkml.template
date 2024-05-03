@@ -1,0 +1,88 @@
+id: https://openmicroscopy.org/ld/{{ schema["title"] }}
+name: {{ schema["title"] }}
+
+description: |-
+    Linked data description of the OME Data Model
+    {{ schema | pprint | indent}}
+
+license: https://creativecommons.org/publicdomain/zero/1.0/
+default_curi_maps:
+  - semweb_context
+imports:
+  - linkml:types
+{%- for key, value in schema["properties"].items() -%}
+  {%- set type = value.get("name", "FIXME").removesuffix("Ref") -%}
+  {%- if type not in ("ID", "datetime", "string") %}
+  - {{ type }}{% endif %}{% endfor %}
+prefixes:
+  {{ schema["title"] }}: https://openmicroscopy.org/ld/{{ schema["title"] }}
+  linkml: https://w3id.org/linkml/
+  schema: http://schema.org/
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  prov: http://www.w3.org/ns/prov#
+default_prefix: {{ schema["title"] }}
+default_range: string
+
+classes:
+  {{ schema["title"] }}:
+    {% if bases -%}
+    is_a: {{ bases[0].__name__ }}
+    {%- endif %}
+
+    description: |-
+        {{ schema.get("description", "TODO") | indent(8) }}
+
+    mixins:
+      {%- if "id" in schema["properties"] %}
+      - HasId{% endif %}
+      {%- if "name" in schema["properties"] %}
+      - HasName{% endif %}{# TODO: Move to "NamedThing" in https://linkml.io/linkml-common/? #}
+
+    attributes:
+{%- for key, value in schema["properties"].items() -%}
+      {# { value["extras"]  } #}
+  {#-
+
+     SET UP
+
+  -#}
+  {%- set key = key | replace('_ref', '') -%}
+  {%- set type = value.get("name", "FIXME").removesuffix("Ref") -%}
+  {#-
+
+      ATTRIBUTE HANDLING
+
+  -#}
+  {%- if value["type"] == "Attribute" -%}
+      {%- if key in ("id", "name") -%}
+        {#- SKIP MIXINS -#}
+      {%- else %}
+      # XML Attribute
+      {{ key }}:
+        range: {{ type }}
+        required: {{ value["required"] | default('false')}}
+        multivalued: {{ "items" in value }}
+      {% endif -%}
+
+  {%- elif value["type"] == "Element" -%}
+  {#-
+
+      ELEMENT HANDLING
+
+  #}
+      # XML Element
+      {{ key }}:
+        range: {{ type }}
+        required: {{ value["required"] | default('false')}}
+        multivalued: {{ "items" in value }}
+  {#-
+
+      OTHER TYPES??
+
+  -#}
+  {% else -%}
+      Error: we should not be here. Another type needs registering:
+        {{ key }}: {{ value }}
+        FIXME 0/0
+  {%- endif %}
+{%- endfor %}

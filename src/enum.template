@@ -1,0 +1,26 @@
+id: https://openmicroscopy.org/ld/{{ schema["title"] }}
+name: {{ schema["title"] }}
+
+description: |-
+    Linked data description of the OME Data Model
+    {{ schema | pprint | indent}}
+
+license: https://creativecommons.org/publicdomain/zero/1.0/
+default_curi_maps:
+  - semweb_context
+imports:
+  - linkml:types
+prefixes:
+  {{ schema["title"] }}: https://openmicroscopy.org/ld/{{ schema["title"] }}
+  linkml: https://w3id.org/linkml/
+  schema: http://schema.org/
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  prov: http://www.w3.org/ns/prov#
+default_prefix: {{ schema["title"] }}
+default_range: string
+
+enums:
+  enum["title"]:
+    permissible_values:
+      {% for value in enum["values"] -%}
+      {{ value }}:{% endfor %}
