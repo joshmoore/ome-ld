@@ -20,7 +20,7 @@ default_prefix: {{ schema["title"] }}
 default_range: string
 
 enums:
-  enum["title"]:
+  {{ schema["title"] }}:
     permissible_values:
-      {% for value in enum["values"] -%}
+      {%- for value in schema["values"] %}
       {{ value }}:{% endfor %}

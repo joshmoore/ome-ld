@@ -180,36 +180,38 @@ def generate(output_dir):
         defs = definitions()
 
     for name, kls in defs.items():
-        if type(kls) in (enum.EnumType, type):
-            print(f"Skipping {type(kls)} {name}...")
-            continue
+
         if name.endswith("Mixin"):
             print(f"Skipping {name}...")
             continue
-        # elif name in ("OME", "ROI"):
-        #     print(f"Skipping {name} (type={type(kls)})...")
-        #     continue
 
-        #
-        # Add additional fields
-        #
+        elif type(kls) in (enum.EnumType, type):
+            print(f"Processing enum: {type(kls)} {name}...")
+            schema = {
+                "title": kls.__name__,
+                "values": [x.value for x in kls],
+            }
+            with open(os.path.join(output_dir, name + ".yaml"), "w") as o:
+                o.write(enum_template.render(schema=schema))
 
-        bases = list(kls.__bases__)
-        try:
-            bases.remove(OMEType)
-        except:
-            pass
+        else:
+            template = kls_template
+            schema = build_schema(kls)
 
-        if bases:
-            print(f"Found bases: {','.join([str(x) for x in bases])}")
-            if len(bases) > 1:
-                raise Exception("What?!")
+            bases = list(kls.__bases__)
+            try:
+                bases.remove(OMEType)
+            except:
+                pass
 
-        schema = build_schema(kls)
+            if bases:
+                print(f"Found bases: {','.join([str(x) for x in bases])}")
+                if len(bases) > 1:
+                    raise Exception("What?!")
 
-        print(f"Processing {name}...")
-        with open(os.path.join(output_dir, name + ".yaml"), "w") as o:
-            o.write(kls_template.render(schema=schema, bases=bases))
+            print(f"Processing {name}...")
+            with open(os.path.join(output_dir, name + ".yaml"), "w") as o:
+                o.write(template.render(schema=schema, bases=bases))
 
 
 def build_schema(kls):
