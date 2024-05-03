@@ -1,0 +1,45 @@
+#######################################################################################
+# A default configuration that will be loaded for all jupyter books
+# See the documentation for help and more options: 
+# https://jupyterbook.org/customize/config.html
+
+#######################################################################################
+# Book settings
+title                       : OME Linked Data
+author                      : OME
+copyright                   : "2024"
+logo                        : logo.png
+
+# Force re-execution of notebooks on each build.
+# See https://jupyterbook.org/content/execute.html
+execute:
+  execute_notebooks: force
+  timeout: -1
+
+# Define the name of the latex output file for PDF builds
+latex:
+  latex_documents:
+    targetname: book.tex
+
+# Add a bibtex file so that we can create citations
+bibtex_bibfiles:
+  - references.bib
+
+# Information about where the book exists on the web
+#repository:
+#  url: https://gitlab.com/sdsc-rds/client-repos/tdr/  # Online location of your book
+#  path_to_book: static # Optional path to your book, relative to the repository root
+#  branch: codebookDev    # Which branch of the repository should be used when creating links (optional)
+
+# Add GitHub buttons to your book
+# See https://jupyterbook.org/customize/config.html#add-a-link-to-your-repository
+html:
+  use_issues_button: false
+  use_repository_button: false
+
+sphinx:
+  extra_extensions:
+    - sphinxcontrib.mermaid
+  config:
+    # https://github.com/executablebooks/jupyter-book/issues/1950
+    suppress_warnings: ["mystnb.unknown_mime_type"]
