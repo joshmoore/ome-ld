@@ -1,4 +1,4 @@
-id: https://openmicroscopy.org/ld/{{ schema["title"] }}
+id: https://ld.openmicroscopy.org/ml/{{ schema["title"] }}
 name: {{ schema["title"] }}
 
 description: |-
@@ -11,7 +11,7 @@ default_curi_maps:
 imports:
   - linkml:types
 prefixes:
-  {{ schema["title"] }}: https://openmicroscopy.org/ld/{{ schema["title"] }}
+  {{ schema["title"] }}: https://ld.openmicroscopy.org/ml/{{ schema["title"] }}
   linkml: https://w3id.org/linkml/
   schema: http://schema.org/
   rdfs: http://www.w3.org/2000/01/rdf-schema#
