@@ -1,0 +1,23 @@
+id: https://ld.openmicroscopy.org/ml/Type
+name: Type
+
+description: |-
+    what is this?!
+    
+
+license: https://creativecommons.org/publicdomain/zero/1.0/
+default_curi_maps:
+  - semweb_context
+imports:
+  - linkml:types
+prefixes:
+  Type: https://ld.openmicroscopy.org/ml/Type
+  linkml: https://w3id.org/linkml/
+  schema: http://schema.org/
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  prov: http://www.w3.org/ns/prov#
+default_prefix: OME
+default_range: string
+
+classes:
+  Type:
