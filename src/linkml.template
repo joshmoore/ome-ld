@@ -3,7 +3,7 @@ name: {{ schema["title"] }}
 
 description: |-
     Linked data description of the OME Data Model
-    {{ schema | pprint | indent}}
+    {# schema | pprint | indent #}
 
 license: https://creativecommons.org/publicdomain/zero/1.0/
 default_curi_maps:

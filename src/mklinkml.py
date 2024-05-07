@@ -186,7 +186,7 @@ def generate(output_dir):
             continue
 
         elif type(kls) in (enum.EnumType, type):
-            print(f"Processing enum: {type(kls)} {name}...")
+            print(f"Processing enum: {name}...")
             schema = {
                 "title": kls.__name__,
                 "values": [x.value for x in kls],
