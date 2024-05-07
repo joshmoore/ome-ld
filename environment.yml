@@ -1,0 +1,37 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - curl
+  - git
+  - make
+  - rsync
+  - ome-types
+  - openjdk
+  - openpyxl
+  - graphviz
+  - python
+  - pip
+  - pip:
+      - pre-commit
+      - jupyter-book
+      - matplotlib
+      - numpy
+      - ghp-import
+      - jinja-cli
+      - jupyterlite
+      - jupyterlab-webrtc-docprovider
+      - sphinxcontrib-mermaid
+      # Codebook updates
+      - pandas
+      - wikidataintegrator
+      - rdflib
+      - graphviz
+      - mdutils
+      - oaklib
+      # Dashboards
+      - plotly
+      - ipyaggrid
+      - shex-visualization
+      # generation
+      - linkml
