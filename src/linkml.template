@@ -10,10 +10,54 @@ default_curi_maps:
   - semweb_context
 imports:
   - linkml:types
-{%- for key, value in schema["properties"].items() -%}
-  {%- set type = value.get("name", "FIXME").removesuffix("Ref") -%}
-  {%- if type not in ("ID", "datetime", "string") %}
-  - {{ type }}{% endif %}{% endfor %}
+{#
+  Deactivated with the hope that the imports work now
+  # Hard-coded types that should be introspected properly
+  - Type  # FIXME
+  - MetadataFile # FIXME
+  - BigEndian # FIXME
+  - Color # FIXME
+  - Microscope_Type # FIXME
+  - Filament_Type # FIXME
+  - Arc_Type # FIXME
+  - Laser_Type # FIXME
+  - Laser_LaserMedium # FIXME
+  - Laser_Pulse # FIXME
+  - Detector_Type # FIXME
+  - Objective_Correction # FIXME
+  - Objective_Immersion # FIXME
+  - ObjectiveSettings_Medium # FIXME
+  - Channel_IlluminationType # FIXME
+  - Channel_AcquisitionMode # FIXME
+  - Channel_ContrastMethod # FIXME
+  - ExcitationFilter # FIXME
+  - EmissionFilter # FIXME
+  - Filter_Type # FIXME
+  - Shape_FillRule
+  - Shape_FontFamily
+  - Shape_FontStyle
+  - X
+  - Y
+#}
+{%- for key, value in schema["properties"].items() %}
+  # DEBUG: {{ value }}
+  {%- if value["type"] == "Attribute" -%}
+    {%- if "anyOf" in value -%}
+      {%- if "$ref" in value["anyOf"] %}
+set type here
+check for "string" and omit
+  - {{ value["anyOf"][0]["$ref"].split("/")[-1] }}
+      {%- endif -%}
+    {% elif type in ("ID", "datetime", "string", "number", "integer", "boolean", "A00", "A01", "A02", "A10", "A11", "A12", "Bin") or "urn:uuid" not in type %}
+  # skipping {{ type }}
+    {% else %}
+  - {{ value["name"] }}
+    {%- endif -%}
+  {%- elif value["type"] not in ("string", "Wildcard") and value["type"] != "Attribute" -%}{#- See Other types section at the bottom -#}
+    {%- set type = value.get("name", value.__str__()).removesuffix("Ref") %}
+  - {{ type }}
+  {% endif -%}
+{%- endfor %}
 prefixes:
   {{ schema["title"] }}: https://ld.openmicroscopy.org/ml/{{ schema["title"] }}
   linkml: https://w3id.org/linkml/
@@ -47,21 +91,38 @@ classes:
 
   -#}
   {%- set key = key | replace('_ref', '') -%}
-  {%- set type = value.get("name", "FIXME").removesuffix("Ref") -%}
+  {%- set type = value.get("name", value.__str__()).removesuffix("Ref") -%}
+  {#- FIXME: POINTS IS WEIRD -#}
+  {%- if type in ("Points", "FileName", "NamingConvention", "A00", "A01", "A02", "A10", "A11", "A12") or "urn:uuid" in type -%}
+    {%- set type = "string" -%}
+  {%- elif type == "number" -%}
+    {%- set type = "integer" -%}
+  {%- elif "allOf" in value -%}
+    {#- EXAMPLE: 'allOf': [{'$ref': '#/$defs/UnitsLength'}], 'default': 'reference frame', 'name': 'WellOriginYUnit', 'type': 'Attribute' -#}
+    {%- set type = value["allOf"][0]["$ref"] -%}
+  {%- endif -%}
   {#-
 
       ATTRIBUTE HANDLING
 
   -#}
-  {%- if value["type"] == "Attribute" -%}
+  {%- if value["type"] == "Attribute" %}
+      # DEBUG: {{ value }}
       {%- if key in ("id", "name") -%}
         {#- SKIP MIXINS -#}
+      {%- elif "min_inclusive" in value or "minimum" in value %}
+      # TODO: has min_inclusive so it must be a number (Add range below)
+      {{ key }}:
+        range: integer
+        required: {{ value["required"] | default('false')}}
+        multivalued: {{ "items" in value }}
       {%- else %}
       # XML Attribute
       {{ key }}:
         range: {{ type }}
         required: {{ value["required"] | default('false')}}
         multivalued: {{ "items" in value }}
+        # {{ value }}
       {% endif -%}
 
   {%- elif value["type"] == "Element" -%}
@@ -70,19 +131,31 @@ classes:
       ELEMENT HANDLING
 
   #}
+    {%- if type in ("Bin",) -%}{# these are complex and need work #}
+      {{ key }}:
+        range: string
+        required: {{ value["required"] | default('false')}}
+        multivalued: {{ "items" in value }}
+    {%- else %}
+      # DEBUG: {{ value }}
       # XML Element
       {{ key }}:
         range: {{ type }}
         required: {{ value["required"] | default('false')}}
         multivalued: {{ "items" in value }}
+    {%- endif -%}
   {#-
 
       OTHER TYPES??
 
   -#}
-  {% else -%}
-      Error: we should not be here. Another type needs registering:
-        {{ key }}: {{ value }}
-        FIXME 0/0
+  {%- elif value["type"] == "string" and value["format"] in ("base64", "Bin") %}
+      # TODO: fix complex string types
+      {{ key }}:
+        range: string
+        required: {{ value["required"] | default('false')}}
+        multivalued: {{ "items" in value }}
+  {% else %}
+      # Error: we should not be here. Another type needs registering: {{ key }}: {{ value }} FIXME
   {%- endif %}
 {%- endfor %}

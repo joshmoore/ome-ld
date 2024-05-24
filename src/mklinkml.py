@@ -254,9 +254,9 @@ def build_schema(kls):
                         if item["format"] == "date-time":
                             name = "datetime"
                         elif item["format"] == "color":
-                            name = "FIXME:Color"
+                            name = "Color"  # FIXME
                         elif item["format"] == "binary":
-                            name = "FIXME:Bin"
+                            name = "Bin"  # FIXME
                         else:
                             raise Exception(item)
                     elif len(item) > 1:  # Keys other than "string" that we need to handle
