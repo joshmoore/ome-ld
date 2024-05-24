@@ -10,13 +10,13 @@ default_curi_maps:
   - semweb_context
 imports:
   - linkml:types
-{#
-  Deactivated with the hope that the imports work now
-  # Hard-coded types that should be introspected properly
   - Type  # FIXME
   - MetadataFile # FIXME
   - BigEndian # FIXME
   - Color # FIXME
+{#
+  Deactivated with the hope that the imports work now
+  # Hard-coded types that should be introspected properly
   - Microscope_Type # FIXME
   - Filament_Type # FIXME
   - Arc_Type # FIXME
@@ -43,19 +43,25 @@ imports:
   # DEBUG: {{ value }}
   {%- if value["type"] == "Attribute" -%}
     {%- if "anyOf" in value -%}
-      {%- if "$ref" in value["anyOf"] %}
-set type here
-check for "string" and omit
-  - {{ value["anyOf"][0]["$ref"].split("/")[-1] }}
+      {%- if "$ref" in value["anyOf"][0] %}
+        {%- set type = value["anyOf"][0]["$ref"].split("/")[-1] -%}
+        {%- if type not in ("string",) %}
+  - {{ type }}
+        {%- endif -%}
       {%- endif -%}
     {% elif type in ("ID", "datetime", "string", "number", "integer", "boolean", "A00", "A01", "A02", "A10", "A11", "A12", "Bin") or "urn:uuid" not in type %}
   # skipping {{ type }}
     {% else %}
+      {%- set type = value["name"] -%}
+      {%- if type not in ("string",) %}
   - {{ value["name"] }}
+      {%- endif -%}
     {%- endif -%}
-  {%- elif value["type"] not in ("string", "Wildcard") and value["type"] != "Attribute" -%}{#- See Other types section at the bottom -#}
+  {%- elif value["type"] not in ("string", "Wildcard") -%}{#- See Other types section at the bottom -#}
     {%- set type = value.get("name", value.__str__()).removesuffix("Ref") %}
+    {%- if type not in ("string", "datetime", "Bin") %}
   - {{ type }}
+    {% endif -%}
   {% endif -%}
 {%- endfor %}
 prefixes:
