@@ -164,6 +164,15 @@ import enum
 import os
 
 OMEType = ome_types._mixins._base_type.OMEType
+OMEMixin = ome_types._mixins._ome.OMEMixin
+InstrumentMixin = ome_types._mixins._instrument.InstrumentMixin
+KindMixin = ome_types._mixins._kinded.KindMixin
+ShapeUnionMixin = ome_types._mixins._collections.ShapeUnionMixin
+MapMixin = ome_types._mixins._map_mixin.MapMixin
+ReferenceMixin = ome_types._mixins._reference.ReferenceMixin
+SAMixin = ome_types._mixins._collections.StructuredAnnotationsMixin
+
+mixins = (OMEType, OMEMixin, InstrumentMixin, KindMixin, ShapeUnionMixin, MapMixin, ReferenceMixin, SAMixin)
 
 @click.command()
 @click.argument('output_dir',
@@ -199,15 +208,17 @@ def generate(output_dir):
             schema = build_schema(kls)
 
             bases = list(kls.__bases__)
-            try:
-                bases.remove(OMEType)
-            except:
-                pass
+            for x in mixins:
+                try:
+                    bases.remove(x)
+                except:
+                    pass
 
             if bases:
                 print(f"Found bases: {','.join([str(x) for x in bases])}")
                 if len(bases) > 1:
                     raise Exception("What?!")
+
 
             print(f"Processing {name}...")
             with open(os.path.join(output_dir, name + ".yaml"), "w") as o:

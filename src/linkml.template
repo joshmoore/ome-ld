@@ -14,6 +14,10 @@ imports:
   - MetadataFile # FIXME
   - BigEndian # FIXME
   - Color # FIXME
+  - extra-ome
+    {% if bases %}
+  - {{ bases[0].__name__ }}
+    {% endif %}
 {#
   Deactivated with the hope that the imports work now
   # Hard-coded types that should be introspected properly
@@ -122,6 +126,11 @@ classes:
         range: integer
         required: {{ value["required"] | default('false')}}
         multivalued: {{ "items" in value }}
+      {%- elif type in ("X", "Y", "X1", "X2", "Y1", "Y2", "RadiusX", "RadiusY", "Width", "Height") %}
+        # FIXME: skipped
+      {%- elif key in ("href", "sha1") %}
+      {{ key }}:
+        range: string
       {%- else %}
       # XML Attribute
       {{ key }}:
