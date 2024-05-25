@@ -16,7 +16,7 @@ prefixes:
   schema: http://schema.org/
   rdfs: http://www.w3.org/2000/01/rdf-schema#
   prov: http://www.w3.org/ns/prov#
-default_prefix: OME
+default_prefix: Type
 default_range: string
 
 classes:
