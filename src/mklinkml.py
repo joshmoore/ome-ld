@@ -229,7 +229,7 @@ def generate(output_dir):
             print(f"Processing {name}...")
             classes[name] = schema
 
-    with open(os.path.join(output_dir, "core.yaml"), "w") as o:
+    with open(os.path.join(output_dir, "model.yaml"), "w") as o:
         o.write(template.render(classes=classes, enums=enums))
 
 

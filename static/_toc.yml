@@ -6,7 +6,8 @@ root: index
 
 parts:
 
-- caption: Core model
-  file: core/index
+- caption: Models
   chapters:
-  - glob: core/*
+  - file: core/index
+  - glob: core/docs/*
+  - glob: core/docs/types/*

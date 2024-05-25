@@ -7,15 +7,16 @@ book: docs
 	jupyter-book build ../static
 
 .PHONY: docs
-docs: ../static/core/core.yaml
-	gen-doc ../static/core/core.yaml -d ../static/core/ --hierarchical-class-view -vvv --log_level=DEBUG --stacktrace
-
-../static/core/core.yaml:
-	mkdir ../static/core
-	./mklinkml.py ../static/core
+docs: ../static/core/model.yaml
+	cp index.md ../static/core/index.md
+	gen-project ../static/core/model.yaml -d ../static/core/
 
 validate:
-	linkml-validate --legacy-mode -s ../static/core/core.yaml
+	linkml-validate --legacy-mode -s ../static/core/model.yaml
+
+../static/core/model.yaml:
+	mkdir ../static/core
+	./mklinkml.py ../static/core
 
 .PHONY: clean
 clean:

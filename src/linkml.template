@@ -1,5 +1,5 @@
-id: https://ld.openmicroscopy.org/core
-name: core
+id: https://ld.openmicroscopy.org/core/
+name: OME-Core-Model
 
 description: |-
     Linked data description of the OME Data Model
@@ -12,7 +12,7 @@ imports:
   - linkml:types
 
 prefixes:
-  core: https://ld.openmicroscopy.org/core
+  core: https://ld.openmicroscopy.org/core/
   linkml: https://w3id.org/linkml/
   schema: http://schema.org/
   rdfs: http://www.w3.org/2000/01/rdf-schema#
@@ -51,9 +51,9 @@ classes:
     {%- endif %}
 
     description: |-
-        ```
+
         {{ schema.get("description", "TODO") | indent(8) }}
-        ```
+
 
     {%- if schema["mixins"] %}
     mixins:
