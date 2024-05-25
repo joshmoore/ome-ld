@@ -1,7 +1,3 @@
-.PHONY: open
-open: book
-	open ../static/_build/html/core/index.html
-
 .PHONY: book
 book: docs
 	jupyter-book build ../static
@@ -21,3 +17,11 @@ validate:
 .PHONY: clean
 clean:
 	rm -rf ../static/core
+
+#
+# Dev targets
+#
+
+.PHONY: open
+open: book
+	open ../static/_build/html/core/index.html
