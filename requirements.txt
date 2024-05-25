@@ -7,3 +7,5 @@ wikidataintegrator
 rdflib
 mdutils
 shexviz
+ome-types
+linkml
