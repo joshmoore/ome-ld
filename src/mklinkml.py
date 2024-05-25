@@ -188,9 +188,11 @@ def generate(output_dir):
     else:
         defs = definitions()
 
+    enums = {}
+    classes = {}
     for name, kls in defs.items():
 
-        if name.endswith("Mixin"):
+        if name.endswith("Mixin") or name.endswith("Ref") or name in ("Union",):
             print(f"Skipping {name}...")
             continue
 
@@ -200,12 +202,13 @@ def generate(output_dir):
                 "title": kls.__name__,
                 "values": [x.value for x in kls],
             }
-            with open(os.path.join(output_dir, name + ".yaml"), "w") as o:
-                o.write(enum_template.render(schema=schema))
+            enums[name] = schema
 
         else:
             template = kls_template
             schema = build_schema(kls)
+
+            schema["tree_root"] = (name == "OME")
 
             bases = list(kls.__bases__)
             for x in mixins:
@@ -218,18 +221,34 @@ def generate(output_dir):
                 print(f"Found bases: {','.join([str(x) for x in bases])}")
                 if len(bases) > 1:
                     raise Exception("What?!")
+                schema["base"] = bases[0].__name__
+            else:
+                schema["base"] = None
 
 
             print(f"Processing {name}...")
-            with open(os.path.join(output_dir, name + ".yaml"), "w") as o:
-                o.write(template.render(schema=schema, bases=bases))
+            classes[name] = schema
+
+    with open(os.path.join(output_dir, "core.yaml"), "w") as o:
+        o.write(template.render(classes=classes, enums=enums))
 
 
 def build_schema(kls):
 
-    # TODO: move more of the template if statements here
     schema = kls.schema()
+    properties = {}  # Updated values to be placed in the schema
+    mixins = {}
+
     for key, value in schema["properties"].items():
+
+        # Extract mixins
+        if key in ("id", "name"):
+            mixins[key] = value
+            continue
+
+        # Choose new key
+        key = key.replace("_ref", "")
+
         required = True
         name = None
         if "anyOf" in value:
@@ -265,9 +284,9 @@ def build_schema(kls):
                         if item["format"] == "date-time":
                             name = "datetime"
                         elif item["format"] == "color":
-                            name = "Color"  # FIXME
+                            name = "string"  # FIXME
                         elif item["format"] == "binary":
-                            name = "Bin"  # FIXME
+                            name = "string"  # FIXME
                         else:
                             raise Exception(item)
                     elif len(item) > 1:  # Keys other than "string" that we need to handle
@@ -282,10 +301,21 @@ def build_schema(kls):
                 # Unhandled
                 raise Exception(item)
 
+            # Post-process the type value
+            name = name.removesuffix("Ref")
+            if name in ("Points", "FileName", "NamingConvention", "A00", "A01", "A02", "A10", "A11", "A12") or "urn:uuid" in name:
+                name = "string"
+            elif name == "number":
+                name = "integer"
+
+
+
             # Overwrite values
             value["name"] = name
             value["required"] = required
+            properties[key] = value
 
+    schema["properties"] = properties
     return schema
 
 

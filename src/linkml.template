@@ -1,5 +1,5 @@
-id: https://ld.openmicroscopy.org/ml/{{ schema["title"] }}
-name: {{ schema["title"] }}
+id: https://ld.openmicroscopy.org/core
+name: core
 
 description: |-
     Linked data description of the OME Data Model
@@ -10,167 +10,79 @@ default_curi_maps:
   - semweb_context
 imports:
   - linkml:types
-  - Type  # FIXME
-  - MetadataFile # FIXME
-  - BigEndian # FIXME
-  - Color # FIXME
-  - extra-ome
-    {% if bases %}
-  - {{ bases[0].__name__ }}
-    {% endif %}
-{#
-  Deactivated with the hope that the imports work now
-  # Hard-coded types that should be introspected properly
-  - Microscope_Type # FIXME
-  - Filament_Type # FIXME
-  - Arc_Type # FIXME
-  - Laser_Type # FIXME
-  - Laser_LaserMedium # FIXME
-  - Laser_Pulse # FIXME
-  - Detector_Type # FIXME
-  - Objective_Correction # FIXME
-  - Objective_Immersion # FIXME
-  - ObjectiveSettings_Medium # FIXME
-  - Channel_IlluminationType # FIXME
-  - Channel_AcquisitionMode # FIXME
-  - Channel_ContrastMethod # FIXME
-  - ExcitationFilter # FIXME
-  - EmissionFilter # FIXME
-  - Filter_Type # FIXME
-  - Shape_FillRule
-  - Shape_FontFamily
-  - Shape_FontStyle
-  - X
-  - Y
-#}
-{%- for key, value in schema["properties"].items() %}
-  # DEBUG: {{ value }}
-  {%- if value["type"] == "Attribute" -%}
-    {%- if "anyOf" in value -%}
-      {%- if "$ref" in value["anyOf"][0] %}
-        {%- set type = value["anyOf"][0]["$ref"].split("/")[-1] -%}
-        {%- if type not in ("string",) %}
-  - {{ type }}
-        {%- endif -%}
-      {%- endif -%}
-    {% elif type in ("ID", "datetime", "string", "number", "integer", "boolean", "A00", "A01", "A02", "A10", "A11", "A12", "Bin") or "urn:uuid" not in type %}
-  # skipping {{ type }}
-    {% else %}
-      {%- set type = value["name"] -%}
-      {%- if type not in ("string",) %}
-  - {{ value["name"] }}
-      {%- endif -%}
-    {%- endif -%}
-  {%- elif value["type"] not in ("string", "Wildcard") -%}{#- See Other types section at the bottom -#}
-    {%- set type = value.get("name", value.__str__()).removesuffix("Ref") %}
-    {%- if type not in ("string", "datetime", "Bin") %}
-  - {{ type }}
-    {% endif -%}
-  {% endif -%}
-{%- endfor %}
+
 prefixes:
-  {{ schema["title"] }}: https://ld.openmicroscopy.org/ml/{{ schema["title"] }}
+  core: https://ld.openmicroscopy.org/core
   linkml: https://w3id.org/linkml/
   schema: http://schema.org/
   rdfs: http://www.w3.org/2000/01/rdf-schema#
   prov: http://www.w3.org/ns/prov#
-default_prefix: {{ schema["title"] }}
+
+default_prefix: core
 default_range: string
 
+slots:
+  id:
+    identifier: true
+    slot_uri: schema:identifier
+  name:
+    slot_uri: schema:name
+
 classes:
-  {{ schema["title"] }}:
-    {% if bases -%}
-    is_a: {{ bases[0].__name__ }}
+
+  HasId:
+    mixin: true
+    slots:
+      - id
+
+  HasName:
+    mixin: true
+    slots:
+      - name
+
+
+
+{%- for kls, schema in classes.items() %}{# #################################### #}
+
+  {{ kls }}:
+    tree_root: {{ schema["tree_root"] }}
+    {%- if schema["base"] %}
+    is_a: {{ schema["base"] }}
     {%- endif %}
 
     description: |-
+        ```
         {{ schema.get("description", "TODO") | indent(8) }}
+        ```
 
+    {%- if schema["mixins"] %}
     mixins:
-      {%- if "id" in schema["properties"] %}
-      - HasId{% endif %}
-      {%- if "name" in schema["properties"] %}
-      - HasName{% endif %}{# TODO: Move to "NamedThing" in https://linkml.io/linkml-common/? #}
+      {%- if "id" in schema["mixins"] %}
+      - HasId
+      {% endif %}
+      {%- if "name" in schema["mixins"] %}
+      # TODO: Move to "NamedThing" in https://linkml.io/linkml-common/?
+      - HasName
+      {% endif %}
+    {% endif %}
 
+    {%- if schema["properties"] %}
     attributes:
-{%- for key, value in schema["properties"].items() -%}
-      {# { value["extras"]  } #}
-  {#-
-
-     SET UP
-
-  -#}
-  {%- set key = key | replace('_ref', '') -%}
-  {%- set type = value.get("name", value.__str__()).removesuffix("Ref") -%}
-  {#- FIXME: POINTS IS WEIRD -#}
-  {%- if type in ("Points", "FileName", "NamingConvention", "A00", "A01", "A02", "A10", "A11", "A12") or "urn:uuid" in type -%}
-    {%- set type = "string" -%}
-  {%- elif type == "number" -%}
-    {%- set type = "integer" -%}
-  {%- elif "allOf" in value -%}
-    {#- EXAMPLE: 'allOf': [{'$ref': '#/$defs/UnitsLength'}], 'default': 'reference frame', 'name': 'WellOriginYUnit', 'type': 'Attribute' -#}
-    {%- set type = value["allOf"][0]["$ref"] -%}
-  {%- endif -%}
-  {#-
-
-      ATTRIBUTE HANDLING
-
-  -#}
-  {%- if value["type"] == "Attribute" %}
+      {%- for key, value in schema["properties"].items() -%}{# ============= #}
       # DEBUG: {{ value }}
-      {%- if key in ("id", "name") -%}
-        {#- SKIP MIXINS -#}
-      {%- elif "min_inclusive" in value or "minimum" in value %}
-      # TODO: has min_inclusive so it must be a number (Add range below)
       {{ key }}:
-        range: integer
-        required: {{ value["required"] | default('false')}}
-        multivalued: {{ "items" in value }}
-      {%- elif type in ("X", "Y", "X1", "X2", "Y1", "Y2", "RadiusX", "RadiusY", "Width", "Height") %}
-        # FIXME: skipped
-      {%- elif key in ("href", "sha1") %}
-      {{ key }}:
-        range: string
-      {%- else %}
-      # XML Attribute
-      {{ key }}:
-        range: {{ type }}
-        required: {{ value["required"] | default('false')}}
-        multivalued: {{ "items" in value }}
-        # {{ value }}
-      {% endif -%}
-
-  {%- elif value["type"] == "Element" -%}
-  {#-
-
-      ELEMENT HANDLING
-
-  #}
-    {%- if type in ("Bin",) -%}{# these are complex and need work #}
-      {{ key }}:
-        range: string
-        required: {{ value["required"] | default('false')}}
-        multivalued: {{ "items" in value }}
-    {%- else %}
-      # DEBUG: {{ value }}
-      # XML Element
-      {{ key }}:
-        range: {{ type }}
-        required: {{ value["required"] | default('false')}}
-        multivalued: {{ "items" in value }}
+        range: {{ value["name"] }}
+        required: {{ value["required"] | default('false') }}
+        multivalued: {{ value["multivalued"] }}
+      {%- endfor %}{# ====================================================== #}
     {%- endif -%}
-  {#-
+{%- endfor %}{# ############################################################ #}
 
-      OTHER TYPES??
-
-  -#}
-  {%- elif value["type"] == "string" and value["format"] in ("base64", "Bin") %}
-      # TODO: fix complex string types
-      {{ key }}:
-        range: string
-        required: {{ value["required"] | default('false')}}
-        multivalued: {{ "items" in value }}
-  {% else %}
-      # Error: we should not be here. Another type needs registering: {{ key }}: {{ value }} FIXME
-  {%- endif %}
-{%- endfor %}
+enums:
+{%- for key, enum in enums.items() %}{# #################################### #}
+  {{ key }}:
+    permissible_values:
+    {%- for value in enum["values"] %}{# =================================== #}
+      {{ value }}:
+    {%- endfor %}{# ======================================================== #}
+{%- endfor %}{# ############################################################ #}

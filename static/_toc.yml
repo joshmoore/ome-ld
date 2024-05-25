@@ -3,3 +3,10 @@
 
 format: jb-book
 root: index
+
+parts:
+
+- caption: Core model
+  file: core/index
+  chapters:
+  - glob: core/*
